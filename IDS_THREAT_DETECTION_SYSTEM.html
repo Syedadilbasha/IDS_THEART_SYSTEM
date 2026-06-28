@@ -1,0 +1,351 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans)}
+.mono{font-family:var(--font-mono);font-size:12px}
+.ids-wrap{padding:1rem 0;display:flex;flex-direction:column;gap:12px}
+.top-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface-1);border:0.5px solid var(--border);border-radius:var(--radius)}
+.top-title{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:500;color:var(--text-primary)}
+.status-dot{width:8px;height:8px;border-radius:50%;background:#0ca30c;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.top-stats{display:flex;gap:16px}
+.ts{font-size:12px;color:var(--text-muted);display:flex;flex-direction:column;align-items:flex-end}
+.ts strong{font-size:14px;font-weight:500;color:var(--text-primary)}
+.metric-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.metric-card{background:var(--surface-1);border:0.5px solid var(--border);border-radius:var(--radius);padding:12px 14px}
+.mc-label{font-size:11px;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
+.mc-val{font-size:22px;font-weight:500;font-family:var(--font-mono);color:var(--text-primary)}
+.mc-sub{font-size:11px;margin-top:2px}
+.main-grid{display:grid;grid-template-columns:1fr 280px;gap:12px}
+.panel{background:var(--surface-1);border:0.5px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.panel-head{padding:10px 14px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.panel-title{font-size:13px;font-weight:500;color:var(--text-primary);display:flex;align-items:center;gap:6px}
+.panel-body{padding:12px 14px}
+.traffic-canvas-wrap{position:relative;width:100%;height:200px}
+.feed-table{width:100%;border-collapse:collapse;font-size:12px;font-family:var(--font-mono)}
+.feed-table th{padding:6px 8px;text-align:left;font-size:10px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;border-bottom:0.5px solid var(--border);background:var(--surface-1)}
+.feed-table td{padding:5px 8px;border-bottom:0.5px solid var(--border);color:var(--text-secondary);vertical-align:middle}
+.feed-table tr:hover td{background:var(--surface-0)}
+.threat-badge{display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:500;font-family:var(--font-mono)}
+.badge-critical{background:#fcebeb;color:#a32d2d}
+.badge-high{background:#faeeda;color:#854f0b}
+.badge-medium{background:#e6f1fb;color:#185fa5}
+.badge-low{background:#eaf3de;color:#3b6d11}
+.badge-normal{background:var(--bg-success);color:var(--text-success)}
+.conf-bar-wrap{display:flex;align-items:center;gap:6px;min-width:90px}
+.conf-bar-bg{flex:1;height:5px;background:var(--border-strong);border-radius:3px;overflow:hidden}
+.conf-bar-fill{height:100%;border-radius:3px;transition:width .3s ease}
+.ml-models{display:flex;flex-direction:column;gap:8px}
+.model-row{padding:10px 12px;background:var(--surface-0);border-radius:var(--radius);border:0.5px solid var(--border)}
+.model-name{font-size:12px;font-weight:500;color:var(--text-primary);margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
+.model-acc{font-size:11px;font-family:var(--font-mono);color:var(--text-accent)}
+.model-bar-bg{height:6px;background:var(--border);border-radius:4px;overflow:hidden}
+.model-bar-fill{height:100%;border-radius:4px;transition:width .5s ease}
+.alert-list{display:flex;flex-direction:column;gap:6px;max-height:260px;overflow-y:auto}
+.alert-item{padding:8px 10px;border-radius:var(--radius);border-left:3px solid;background:var(--surface-0)}
+.alert-item.crit{border-color:#a32d2d;background:#fcebeb}
+.alert-item.high{border-color:#854f0b;background:#faeeda}
+.alert-item.med{border-color:#185fa5;background:#e6f1fb}
+.alert-time{font-size:10px;font-family:var(--font-mono);color:var(--text-muted)}
+.alert-msg{font-size:12px;color:var(--text-primary);margin-top:1px}
+.alert-src{font-size:10px;color:var(--text-secondary);margin-top:1px;font-family:var(--font-mono)}
+.controls{display:flex;gap:8px;align-items:center}
+.pill-btn{padding:4px 10px;font-size:11px;border:0.5px solid var(--border-strong);border-radius:20px;background:transparent;cursor:pointer;color:var(--text-secondary)}
+.pill-btn.active{background:var(--bg-accent);color:var(--text-accent);border-color:var(--border-accent)}
+.bottom-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.chart-wrap{position:relative;width:100%;height:160px}
+.attack-vec{display:grid;grid-template-columns:1fr;gap:6px}
+.vec-row{display:flex;align-items:center;gap:8px}
+.vec-label{font-size:12px;color:var(--text-secondary);min-width:110px}
+.vec-bar-bg{flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden}
+.vec-bar-fill{height:100%;border-radius:4px}
+.vec-pct{font-size:11px;font-family:var(--font-mono);color:var(--text-muted);min-width:34px;text-align:right}
+</style>
+
+<h2 class="sr-only">Intrusion Detection System dashboard showing real-time network traffic analysis with ML-based threat detection</h2>
+
+<div class="ids-wrap">
+
+<div class="top-bar">
+  <div class="top-title">
+    <span class="status-dot"></span>
+    <i class="ti ti-shield-check" style="font-size:16px;color:var(--text-accent)" aria-hidden="true"></i>
+    IDS — ML threat detection system
+  </div>
+  <div class="top-stats">
+    <div class="ts"><span>Mode</span><strong id="mode-label">Live monitor</strong></div>
+    <div class="ts"><span>Uptime</span><strong>04:22:17</strong></div>
+    <div class="ts"><span>Updated</span><strong id="clock">--:--:--</strong></div>
+  </div>
+</div>
+
+<div class="metric-row">
+  <div class="metric-card">
+    <div class="mc-label">Packets / sec</div>
+    <div class="mc-val" id="pps">2,847</div>
+    <div class="mc-sub" style="color:var(--text-success)"><i class="ti ti-trending-up" aria-hidden="true"></i> +12% avg</div>
+  </div>
+  <div class="metric-card">
+    <div class="mc-label">Threats detected</div>
+    <div class="mc-val" id="threats" style="color:#a32d2d">0</div>
+    <div class="mc-sub" style="color:var(--text-muted)">This session</div>
+  </div>
+  <div class="metric-card">
+    <div class="mc-label">Model accuracy</div>
+    <div class="mc-val" style="color:var(--text-accent)" id="accuracy">97.4%</div>
+    <div class="mc-sub" style="color:var(--text-muted)">Ensemble avg</div>
+  </div>
+  <div class="metric-card">
+    <div class="mc-label">False positives</div>
+    <div class="mc-val" id="fp">3</div>
+    <div class="mc-sub" style="color:#854f0b">0.11% FPR</div>
+  </div>
+</div>
+
+<div class="main-grid">
+  <div style="display:flex;flex-direction:column;gap:12px">
+
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title"><i class="ti ti-wave-sine" aria-hidden="true"></i> Live traffic stream</div>
+        <div class="controls">
+          <button class="pill-btn active" onclick="setView('all',this)">All</button>
+          <button class="pill-btn" onclick="setView('threat',this)">Threats only</button>
+          <button class="pill-btn" onclick="setView('anomaly',this)">Anomalies</button>
+        </div>
+      </div>
+      <div class="traffic-canvas-wrap"><canvas id="trafficChart" role="img" aria-label="Live network traffic volume over last 60 seconds">Live traffic data animating</canvas></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title"><i class="ti ti-list-details" aria-hidden="true"></i> Packet feed</div>
+        <span style="font-size:11px;color:var(--text-muted)" id="feed-count">Showing latest 8</span>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="feed-table">
+          <thead><tr>
+            <th>Timestamp</th><th>Source IP</th><th>Dest IP</th><th>Protocol</th><th>Size</th><th>Classification</th><th>Confidence</th>
+          </tr></thead>
+          <tbody id="feed-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:12px">
+
+    <div class="panel">
+      <div class="panel-head"><div class="panel-title"><i class="ti ti-cpu" aria-hidden="true"></i> ML model ensemble</div></div>
+      <div class="panel-body">
+        <div class="ml-models">
+          <div class="model-row">
+            <div class="model-name">Random Forest <span class="model-acc" id="rf-acc">98.1%</span></div>
+            <div class="model-bar-bg"><div class="model-bar-fill" id="rf-bar" style="width:98%;background:#2a78d6"></div></div>
+          </div>
+          <div class="model-row">
+            <div class="model-name">Neural Network <span class="model-acc" id="nn-acc">97.8%</span></div>
+            <div class="model-bar-bg"><div class="model-bar-fill" id="nn-bar" style="width:97%;background:#1baf7a"></div></div>
+          </div>
+          <div class="model-row">
+            <div class="model-name">SVM Classifier <span class="model-acc" id="svm-acc">96.2%</span></div>
+            <div class="model-bar-bg"><div class="model-bar-fill" id="svm-bar" style="width:96%;background:#eda100"></div></div>
+          </div>
+          <div class="model-row">
+            <div class="model-name">Isolation Forest <span class="model-acc" id="iso-acc">94.5%</span></div>
+            <div class="model-bar-bg"><div class="model-bar-fill" id="iso-bar" style="width:94%;background:#e34948"></div></div>
+          </div>
+        </div>
+        <div style="margin-top:12px;padding:8px;background:var(--surface-0);border-radius:var(--radius);border:0.5px solid var(--border)">
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">Ensemble decision</div>
+          <div style="font-size:13px;font-weight:500;color:var(--text-primary)">Majority voting</div>
+          <div style="font-size:11px;color:var(--text-secondary);margin-top:2px">All 4 models vote; alert on ≥3 consensus</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><div class="panel-title"><i class="ti ti-bell-ringing" aria-hidden="true"></i> Active alerts</div>
+        <span class="threat-badge badge-critical" id="alert-count">0 critical</span>
+      </div>
+      <div class="panel-body" style="padding-top:8px">
+        <div class="alert-list" id="alert-list">
+          <div style="font-size:12px;color:var(--text-muted);text-align:center;padding:20px 0">No active threats detected</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="bottom-grid">
+  <div class="panel">
+    <div class="panel-head"><div class="panel-title"><i class="ti ti-chart-bar" aria-hidden="true"></i> Protocol distribution</div></div>
+    <div class="panel-body">
+      <div class="chart-wrap"><canvas id="protoChart" role="img" aria-label="Bar chart showing network protocol distribution">Protocol data</canvas></div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-head"><div class="panel-title"><i class="ti ti-target" aria-hidden="true"></i> Attack vector breakdown</div></div>
+    <div class="panel-body">
+      <div class="attack-vec" id="vec-list"></div>
+    </div>
+  </div>
+</div>
+
+<div style="display:flex;gap:8px;flex-wrap:wrap;padding:2px 0">
+  <button onclick="sendPrompt('Explain how the Random Forest model detects network intrusions')" style="font-size:12px">Random Forest internals ↗</button>
+  <button onclick="sendPrompt('What features does the ML model extract from network packets?')" style="font-size:12px">Feature engineering ↗</button>
+  <button onclick="sendPrompt('How does anomaly detection differ from signature-based IDS?')" style="font-size:12px">Anomaly vs signatures ↗</button>
+  <button onclick="sendPrompt('Add this IDS project to my internship report as a new section')" style="font-size:12px">Add to report ↗</button>
+</div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const IPS = ['192.168.1.','10.0.0.','172.16.0.','203.0.113.','198.51.100.'];
+const PROTOS = ['TCP','UDP','ICMP','HTTP','HTTPS','DNS','FTP','SSH'];
+const ATTACKS = ['Port Scan','SQL Injection','DDoS','Brute Force','XSS','MitM','DNS Spoof'];
+const CLASSIFS = [
+  {label:'Normal',cls:'badge-normal',severity:0},
+  {label:'Normal',cls:'badge-normal',severity:0},
+  {label:'Normal',cls:'badge-normal',severity:0},
+  {label:'Normal',cls:'badge-normal',severity:0},
+  {label:'Low',cls:'badge-low',severity:1},
+  {label:'Medium',cls:'badge-medium',severity:2},
+  {label:'High',cls:'badge-high',severity:3},
+  {label:'Critical',cls:'badge-critical',severity:4},
+];
+function rip(){return IPS[Math.floor(Math.random()*IPS.length)]+(Math.floor(Math.random()*254)+1);}
+function rnd(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function now(){return new Date().toLocaleTimeString('en-GB');}
+let viewMode='all', threatCount=0, fpCount=3, alerts=[], packets=[];
+const vecData={'Port scan':42,'SQL injection':28,'Brute force':19,'DDoS':7,'DNS spoof':4};
+let tickBuf=Array(60).fill(null).map(()=>rnd(1800,3200));
+const isDark=()=>document.documentElement.getAttribute('data-mode')==='dark'||matchMedia('(prefers-color-scheme:dark)').matches;
+
+function buildVec(){
+  const el=document.getElementById('vec-list');
+  const entries=Object.entries(vecData);
+  const max=Math.max(...entries.map(([,v])=>v));
+  const colors=['#e34948','#2a78d6','#eda100','#e87ba4','#4a3aa7'];
+  el.innerHTML=entries.map(([k,v],i)=>`<div class="vec-row">
+    <span class="vec-label mono">${k}</span>
+    <div class="vec-bar-bg"><div class="vec-bar-fill" style="width:${Math.round(v/max*100)}%;background:${colors[i]}"></div></div>
+    <span class="vec-pct">${v}%</span>
+  </div>`).join('');
+}
+buildVec();
+
+function setView(m,btn){
+  viewMode=m;
+  document.querySelectorAll('.pill-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderFeed();
+}
+
+function renderFeed(){
+  let rows=viewMode==='all'?packets:viewMode==='threat'?packets.filter(p=>p.sev>=3):packets.filter(p=>p.sev>=1&&p.sev<=2);
+  rows=rows.slice(-8).reverse();
+  const body=document.getElementById('feed-body');
+  body.innerHTML=rows.map(p=>`<tr>
+    <td class="mono">${p.time}</td>
+    <td class="mono">${p.src}</td>
+    <td class="mono">${p.dst}</td>
+    <td><span class="threat-badge" style="background:var(--border);color:var(--text-secondary)">${p.proto}</span></td>
+    <td class="mono">${p.size}B</td>
+    <td><span class="threat-badge ${p.cls}">${p.label}</span></td>
+    <td><div class="conf-bar-wrap"><div class="conf-bar-bg"><div class="conf-bar-fill" style="width:${p.conf}%;background:${p.sev>=3?'#a32d2d':p.sev>=1?'#854f0b':'#0ca30c'}"></div></div><span class="mono" style="font-size:10px;color:var(--text-muted)">${p.conf}%</span></div></td>
+  </tr>`).join('');
+}
+
+function addAlert(p){
+  const item={time:p.time,msg:ATTACKS[rnd(0,ATTACKS.length-1)]+' detected',src:p.src,sev:p.sev};
+  alerts.unshift(item);
+  if(alerts.length>12)alerts.pop();
+  const el=document.getElementById('alert-list');
+  const critCount=alerts.filter(a=>a.sev>=4).length;
+  document.getElementById('alert-count').textContent=critCount+' critical';
+  el.innerHTML=alerts.slice(0,6).map(a=>`<div class="alert-item ${a.sev>=4?'crit':a.sev>=3?'high':'med'}">
+    <div class="alert-time">${a.time}</div>
+    <div class="alert-msg">${a.msg}</div>
+    <div class="alert-src">${a.src}</div>
+  </div>`).join('');
+}
+
+const tCtx=document.getElementById('trafficChart').getContext('2d');
+const tChart=new Chart(tCtx,{
+  type:'line',
+  data:{
+    labels:Array(60).fill(''),
+    datasets:[
+      {label:'Traffic',data:[...tickBuf],borderColor:'#2a78d6',backgroundColor:'rgba(42,120,214,0.07)',fill:true,borderWidth:1.5,pointRadius:0,tension:.4},
+      {label:'Anomaly',data:Array(60).fill(null),borderColor:'#e34948',backgroundColor:'rgba(227,73,72,0.15)',fill:false,borderWidth:2,pointRadius:4,pointBackgroundColor:'#e34948',tension:0,showLine:false},
+    ]
+  },
+  options:{responsive:true,maintainAspectRatio:false,animation:{duration:200},
+    plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},
+    scales:{
+      x:{display:false},
+      y:{min:0,max:6000,grid:{color:'rgba(128,128,128,0.1)'},ticks:{font:{size:10},color:'#888',maxTicksLimit:5,callback:v=>v>=1000?Math.round(v/100)/10+'k':v}}
+    }
+  }
+});
+
+const pCtx=document.getElementById('protoChart').getContext('2d');
+const protoValues={TCP:0,UDP:0,HTTPS:0,HTTP:0,DNS:0,ICMP:0,FTP:0,SSH:0};
+const pChart=new Chart(pCtx,{
+  type:'bar',
+  data:{
+    labels:Object.keys(protoValues),
+    datasets:[{label:'Packets',data:Object.values(protoValues),backgroundColor:['#2a78d6','#1baf7a','#eda100','#e34948','#4a3aa7','#e87ba4','#eb6834','#73726c'],borderRadius:4,borderSkipped:false}]
+  },
+  options:{responsive:true,maintainAspectRatio:false,animation:{duration:300},
+    plugins:{legend:{display:false}},
+    scales:{x:{ticks:{font:{size:10},color:'#888'}},y:{grid:{color:'rgba(128,128,128,0.1)'},ticks:{font:{size:10},color:'#888',maxTicksLimit:4}}}
+  }
+});
+
+function tick(){
+  document.getElementById('clock').textContent=now();
+  const pps=rnd(2200,4200);
+  tickBuf.push(pps);tickBuf.shift();
+  document.getElementById('pps').textContent=pps.toLocaleString();
+  const anomBuf=Array(60).fill(null);
+
+  for(let i=0;i<rnd(2,5);i++){
+    const c=CLASSIFS[rnd(0,CLASSIFS.length-1)];
+    const proto=PROTOS[rnd(0,PROTOS.length-1)];
+    const p={time:now(),src:rip(),dst:rip(),proto,size:rnd(64,9000),label:c.label,cls:c.cls,sev:c.severity,conf:rnd(78,99)};
+    packets.push(p);
+    protoValues[proto]=(protoValues[proto]||0)+rnd(10,80);
+    if(c.severity>=3){
+      threatCount++;
+      document.getElementById('threats').textContent=threatCount;
+      anomBuf[59]=pps+rnd(800,2000);
+      addAlert(p);
+      if(c.label==='Critical')vecData[Object.keys(vecData)[rnd(0,4)]]+=rnd(1,3);
+    }
+  }
+  if(packets.length>200)packets=packets.slice(-200);
+  tChart.data.datasets[0].data=[...tickBuf];
+  tChart.data.datasets[1].data=anomBuf;
+  tChart.update('none');
+  pChart.data.datasets[0].data=Object.values(protoValues).map(v=>Math.round(v/100));
+  pChart.update('none');
+  buildVec();
+  renderFeed();
+  const models=[['rf',rnd(970,990)/10],['nn',rnd(965,985)/10],['svm',rnd(950,975)/10],['iso',rnd(930,960)/10]];
+  models.forEach(([id,acc])=>{
+    document.getElementById(id+'-acc').textContent=acc.toFixed(1)+'%';
+    document.getElementById(id+'-bar').style.width=acc+'%';
+  });
+  const avgAcc=(models.reduce((s,[,v])=>s+v,0)/models.length).toFixed(1);
+  document.getElementById('accuracy').textContent=avgAcc+'%';
+}
+
+tick();
+setInterval(tick,2000);
+</script>
